@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -26,8 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const checkRole = async (userId: string) => {
-    const { data } = await supabase.rpc('get_my_role');
-    setIsSindico(data === 'sindico');
+    try {
+      const { data } = await supabase.rpc('get_my_role');
+      setIsSindico(data === 'sindico');
+    } catch {
+      setIsSindico(false);
+    }
   };
 
   useEffect(() => {
