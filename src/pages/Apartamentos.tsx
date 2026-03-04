@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -51,14 +50,15 @@ export default function Apartamentos() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Apartamentos</h1>
-          <p className="text-muted-foreground text-sm">Controle de pagamento de condomínio por apartamento</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Apartamentos</h1>
+          <p className="text-muted-foreground text-sm">Controle de pagamento por apartamento</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={selectedMonthId || ''} onValueChange={selectMonth}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Selecionar mês" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Selecionar mês" /></SelectTrigger>
             <SelectContent>
               {months.map(m => (<SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>))}
             </SelectContent>
@@ -85,77 +85,117 @@ export default function Apartamentos() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Card className="glass-card">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Apartamentos</p>
-            <p className="text-2xl font-bold">{monthApartments.length}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs text-muted-foreground mb-1">Total</p>
+            <p className="text-xl sm:text-2xl font-bold">{monthApartments.length}</p>
           </CardContent>
         </Card>
         <Card className="glass-card">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <p className="text-xs text-muted-foreground mb-1">Pagos</p>
-            <p className="text-2xl font-bold text-income">{monthApartments.filter(a => a.status !== 'pendente').length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-income">{monthApartments.filter(a => a.status !== 'pendente').length}</p>
           </CardContent>
         </Card>
         <Card className="glass-card">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <p className="text-xs text-muted-foreground mb-1">Pendentes</p>
-            <p className="text-2xl font-bold text-expense">{monthApartments.filter(a => a.status === 'pendente').length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-expense">{monthApartments.filter(a => a.status === 'pendente').length}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Table */}
+      {/* Apartments List */}
       <Card className="glass-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold">Pagamentos - {currentMonth?.label || 'Selecione um mês'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Apto</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Pagamento</TableHead>
-                <TableHead>Juros</TableHead>
-                <TableHead>Status</TableHead>
-                {isSindico && <TableHead className="w-24"></TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {monthApartments.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum apartamento cadastrado</TableCell></TableRow>
-              ) : (
-                monthApartments.map(apt => {
+          {monthApartments.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Nenhum apartamento cadastrado</p>
+          ) : (
+            <>
+              {/* Mobile view */}
+              <div className="sm:hidden space-y-3">
+                {monthApartments.map(apt => {
                   const config = statusConfig[apt.status];
                   return (
-                    <TableRow key={apt.id}>
-                      <TableCell className="font-semibold">{apt.apartmentNumber}</TableCell>
-                      <TableCell className="text-sm">{formatDate(apt.dueDate)}</TableCell>
-                      <TableCell className="text-sm">{apt.paymentDate ? formatDate(apt.paymentDate) : '—'}</TableCell>
-                      <TableCell className="text-sm text-expense">{apt.interestAmount > 0 ? formatCurrency(apt.interestAmount) : '—'}</TableCell>
-                      <TableCell>
+                    <div key={apt.id} className="p-3 border border-border/50 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-base">Apto {apt.apartmentNumber}</span>
                         <Badge variant="outline" className={config.className}>
                           <config.icon className="w-3 h-3 mr-1" />
                           {config.label}
                         </Badge>
-                      </TableCell>
-                      {isSindico && (
-                        <TableCell>
-                          {apt.status === 'pendente' && (
-                            <Button size="sm" variant="outline" onClick={() => { setShowPay(apt.id); setPayDate(''); }}>
-                              Pagar
-                            </Button>
-                          )}
-                        </TableCell>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-sm">
+                        <span className="text-muted-foreground">Vencimento:</span>
+                        <span>{formatDate(apt.dueDate)}</span>
+                        <span className="text-muted-foreground">Pagamento:</span>
+                        <span>{apt.paymentDate ? formatDate(apt.paymentDate) : '—'}</span>
+                        {apt.interestAmount > 0 && (
+                          <>
+                            <span className="text-muted-foreground">Juros:</span>
+                            <span className="text-expense">{formatCurrency(apt.interestAmount)}</span>
+                          </>
+                        )}
+                      </div>
+                      {isSindico && apt.status === 'pendente' && (
+                        <Button size="sm" variant="outline" className="w-full" onClick={() => { setShowPay(apt.id); setPayDate(''); }}>
+                          Registrar Pagamento
+                        </Button>
                       )}
-                    </TableRow>
+                    </div>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
+                })}
+              </div>
+
+              {/* Desktop view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left text-sm font-medium text-muted-foreground py-2">Apto</th>
+                      <th className="text-left text-sm font-medium text-muted-foreground py-2">Vencimento</th>
+                      <th className="text-left text-sm font-medium text-muted-foreground py-2">Pagamento</th>
+                      <th className="text-left text-sm font-medium text-muted-foreground py-2">Juros</th>
+                      <th className="text-left text-sm font-medium text-muted-foreground py-2">Status</th>
+                      {isSindico && <th className="w-24"></th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthApartments.map(apt => {
+                      const config = statusConfig[apt.status];
+                      return (
+                        <tr key={apt.id} className="border-b border-border/50">
+                          <td className="font-semibold py-2.5">{apt.apartmentNumber}</td>
+                          <td className="text-sm py-2.5">{formatDate(apt.dueDate)}</td>
+                          <td className="text-sm py-2.5">{apt.paymentDate ? formatDate(apt.paymentDate) : '—'}</td>
+                          <td className="text-sm text-expense py-2.5">{apt.interestAmount > 0 ? formatCurrency(apt.interestAmount) : '—'}</td>
+                          <td className="py-2.5">
+                            <Badge variant="outline" className={config.className}>
+                              <config.icon className="w-3 h-3 mr-1" />
+                              {config.label}
+                            </Badge>
+                          </td>
+                          {isSindico && (
+                            <td className="py-2.5">
+                              {apt.status === 'pendente' && (
+                                <Button size="sm" variant="outline" onClick={() => { setShowPay(apt.id); setPayDate(''); }}>
+                                  Pagar
+                                </Button>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
