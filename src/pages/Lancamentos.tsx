@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
@@ -47,14 +46,15 @@ export default function Lancamentos() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Lançamentos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Lançamentos</h1>
           <p className="text-muted-foreground text-sm">Gerencie receitas e despesas do condomínio</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={selectedMonthId || ''} onValueChange={selectMonth}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Selecionar mês" />
             </SelectTrigger>
             <SelectContent>
@@ -65,7 +65,7 @@ export default function Lancamentos() {
           </Select>
 
           {isSindico && (
-            <>
+            <div className="flex gap-2">
               <Dialog open={showNewMonth} onOpenChange={setShowNewMonth}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="icon"><Calendar className="w-4 h-4" /></Button>
@@ -132,87 +132,119 @@ export default function Lancamentos() {
                   </div>
                 </DialogContent>
               </Dialog>
-            </>
+            </div>
           )}
         </div>
       </div>
 
       {/* Balance Summary */}
       {currentMonth && balance && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card className="glass-card">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <p className="text-xs text-muted-foreground mb-1">Saldo Inicial</p>
-              <p className="text-lg font-bold">{formatCurrency(currentMonth.initialBalance)}</p>
+              <p className="text-base sm:text-lg font-bold">{formatCurrency(currentMonth.initialBalance)}</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <p className="text-xs text-muted-foreground mb-1">Receitas</p>
-              <p className="text-lg font-bold text-income">{formatCurrency(balance.totalIncome)}</p>
+              <p className="text-base sm:text-lg font-bold text-income">{formatCurrency(balance.totalIncome)}</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <p className="text-xs text-muted-foreground mb-1">Despesas</p>
-              <p className="text-lg font-bold text-expense">{formatCurrency(balance.totalExpense)}</p>
+              <p className="text-base sm:text-lg font-bold text-expense">{formatCurrency(balance.totalExpense)}</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <p className="text-xs text-muted-foreground mb-1">Saldo Final</p>
-              <p className={`text-lg font-bold ${balance.finalBalance >= 0 ? 'text-income' : 'text-expense'}`}>{formatCurrency(balance.finalBalance)}</p>
+              <p className={`text-base sm:text-lg font-bold ${balance.finalBalance >= 0 ? 'text-income' : 'text-expense'}`}>{formatCurrency(balance.finalBalance)}</p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Transactions Table */}
+      {/* Transactions - Mobile Cards / Desktop Table */}
       {currentMonth && (
         <Card className="glass-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Lançamentos - {currentMonth.label}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  {isSindico && <TableHead className="w-12"></TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentMonth.transactions.length === 0 ? (
-                  <TableRow><TableCell colSpan={isSindico ? 5 : 4} className="text-center text-muted-foreground py-8">Nenhum lançamento registrado</TableCell></TableRow>
-                ) : (
-                  currentMonth.transactions.map(tx => (
-                    <TableRow key={tx.id}>
-                      <TableCell className="text-sm">{formatDate(tx.date)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={tx.type === 'receita' ? 'bg-income-bg text-income border-income/20' : 'bg-expense-bg text-expense border-expense/20'}>
-                          {tx.type === 'receita' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                          {tx.type === 'receita' ? 'Receita' : 'Despesa'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium text-sm">{tx.description}</TableCell>
-                      <TableCell className={`text-right font-semibold text-sm ${tx.type === 'receita' ? 'text-income' : 'text-expense'}`}>
-                        {formatCurrency(tx.value)}
-                      </TableCell>
-                      {isSindico && (
-                        <TableCell>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(currentMonth.id, tx.id)}>
-                            <Trash2 className="w-4 h-4" />
+            {currentMonth.transactions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Nenhum lançamento registrado</p>
+            ) : (
+              <>
+                {/* Mobile view */}
+                <div className="sm:hidden space-y-3">
+                  {currentMonth.transactions.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${tx.type === 'receita' ? 'bg-income-bg' : 'bg-expense-bg'}`}>
+                          {tx.type === 'receita' ? <TrendingUp className="w-3.5 h-3.5 text-income" /> : <TrendingDown className="w-3.5 h-3.5 text-expense" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{tx.description}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`text-sm font-semibold ${tx.type === 'receita' ? 'text-income' : 'text-expense'}`}>
+                          {tx.type === 'receita' ? '+' : '-'}{formatCurrency(tx.value)}
+                        </span>
+                        {isSindico && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(currentMonth.id, tx.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop view */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left text-sm font-medium text-muted-foreground py-2">Data</th>
+                        <th className="text-left text-sm font-medium text-muted-foreground py-2">Tipo</th>
+                        <th className="text-left text-sm font-medium text-muted-foreground py-2">Descrição</th>
+                        <th className="text-right text-sm font-medium text-muted-foreground py-2">Valor</th>
+                        {isSindico && <th className="w-12"></th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentMonth.transactions.map(tx => (
+                        <tr key={tx.id} className="border-b border-border/50">
+                          <td className="text-sm py-2.5">{formatDate(tx.date)}</td>
+                          <td className="py-2.5">
+                            <Badge variant="outline" className={tx.type === 'receita' ? 'bg-income-bg text-income border-income/20' : 'bg-expense-bg text-expense border-expense/20'}>
+                              {tx.type === 'receita' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                              {tx.type === 'receita' ? 'Receita' : 'Despesa'}
+                            </Badge>
+                          </td>
+                          <td className="font-medium text-sm py-2.5">{tx.description}</td>
+                          <td className={`text-right font-semibold text-sm py-2.5 ${tx.type === 'receita' ? 'text-income' : 'text-expense'}`}>
+                            {formatCurrency(tx.value)}
+                          </td>
+                          {isSindico && (
+                            <td className="py-2.5">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(currentMonth.id, tx.id)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
