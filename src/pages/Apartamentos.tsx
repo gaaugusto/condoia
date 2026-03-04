@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCondoStore } from '@/store/condoStore';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency, formatDate } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 
 export default function Apartamentos() {
   const { months, selectedMonthId, selectMonth, apartments, addApartmentPayment, updateApartmentPayment } = useCondoStore();
+  const { isSindico } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
   const [showPay, setShowPay] = useState<string | null>(null);
   const [payDate, setPayDate] = useState('');
@@ -62,21 +64,23 @@ export default function Apartamentos() {
             </SelectContent>
           </Select>
 
-          <Dialog open={showAdd} onOpenChange={setShowAdd}>
-            <DialogTrigger asChild>
-              <Button><Plus className="w-4 h-4 mr-2" /> Apartamento</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Adicionar Apartamento</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div><Label>Nº Apartamento</Label><Input value={newApt.apartmentNumber} onChange={e => setNewApt(p => ({ ...p, apartmentNumber: e.target.value }))} placeholder="Ex: 101" /></div>
-                <div><Label>Data Vencimento</Label><Input type="date" value={newApt.dueDate} onChange={e => setNewApt(p => ({ ...p, dueDate: e.target.value }))} /></div>
-                <div><Label>Valor (R$)</Label><Input type="number" step="0.01" value={newApt.amount || ''} onChange={e => setNewApt(p => ({ ...p, amount: Number(e.target.value) }))} /></div>
-                <div><Label>Juros Mensal (%)</Label><Input type="number" step="0.1" value={newApt.interestRate} onChange={e => setNewApt(p => ({ ...p, interestRate: Number(e.target.value) }))} /></div>
-                <Button onClick={handleAdd} className="w-full">Adicionar</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          {isSindico && (
+            <Dialog open={showAdd} onOpenChange={setShowAdd}>
+              <DialogTrigger asChild>
+                <Button><Plus className="w-4 h-4 mr-2" /> Apartamento</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Adicionar Apartamento</DialogTitle></DialogHeader>
+                <div className="space-y-4">
+                  <div><Label>Nº Apartamento</Label><Input value={newApt.apartmentNumber} onChange={e => setNewApt(p => ({ ...p, apartmentNumber: e.target.value }))} placeholder="Ex: 101" /></div>
+                  <div><Label>Data Vencimento</Label><Input type="date" value={newApt.dueDate} onChange={e => setNewApt(p => ({ ...p, dueDate: e.target.value }))} /></div>
+                  <div><Label>Valor (R$)</Label><Input type="number" step="0.01" value={newApt.amount || ''} onChange={e => setNewApt(p => ({ ...p, amount: Number(e.target.value) }))} /></div>
+                  <div><Label>Juros Mensal (%)</Label><Input type="number" step="0.1" value={newApt.interestRate} onChange={e => setNewApt(p => ({ ...p, interestRate: Number(e.target.value) }))} /></div>
+                  <Button onClick={handleAdd} className="w-full">Adicionar</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -116,7 +120,7 @@ export default function Apartamentos() {
                 <TableHead>Pagamento</TableHead>
                 <TableHead>Juros</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-24"></TableHead>
+                {isSindico && <TableHead className="w-24"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,13 +141,15 @@ export default function Apartamentos() {
                           {config.label}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {apt.status === 'pendente' && (
-                          <Button size="sm" variant="outline" onClick={() => { setShowPay(apt.id); setPayDate(''); }}>
-                            Pagar
-                          </Button>
-                        )}
-                      </TableCell>
+                      {isSindico && (
+                        <TableCell>
+                          {apt.status === 'pendente' && (
+                            <Button size="sm" variant="outline" onClick={() => { setShowPay(apt.id); setPayDate(''); }}>
+                              Pagar
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })
