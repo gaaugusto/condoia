@@ -2,7 +2,7 @@ import { useCondoStore } from '@/store/condoStore';
 import { calculateBalance, formatCurrency, MONTH_NAMES } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, Wallet, Building2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Building2, ArrowUpRight, ArrowDownRight, Landmark } from 'lucide-react';
 
 
 export default function Dashboard() {
@@ -24,9 +24,10 @@ export default function Dashboard() {
 
 
   const summaryCards = [
-    { title: 'Saldo Final', value: formatCurrency(finalBalance), icon: Wallet, trend: finalBalance >= 0 ? 'up' : 'down', color: 'text-primary' },
+    { title: 'Saldo Anterior', value: formatCurrency(currentMonth.initialBalance), icon: Landmark, trend: currentMonth.initialBalance >= 0 ? 'up' : 'down', color: 'text-muted-foreground' },
     { title: 'Receitas', value: formatCurrency(totalIncome), icon: ArrowUpRight, trend: 'up' as const, color: 'text-income' },
     { title: 'Despesas', value: formatCurrency(totalExpense), icon: ArrowDownRight, trend: 'down' as const, color: 'text-expense' },
+    { title: 'Saldo Final', value: formatCurrency(finalBalance), icon: Wallet, trend: finalBalance >= 0 ? 'up' : 'down', color: 'text-primary' },
     { title: 'Apartamentos', value: `${paidCount}/${monthApartments.length} pagos`, icon: Building2, trend: 'up' as const, color: 'text-primary' },
   ];
 
@@ -51,7 +52,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {summaryCards.map((card) => (
           <Card key={card.title} className="glass-card">
             <CardContent className="p-5">
