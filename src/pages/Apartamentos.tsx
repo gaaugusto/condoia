@@ -113,17 +113,15 @@ export default function Apartamentos() {
               <TableRow>
                 <TableHead>Apto</TableHead>
                 <TableHead>Vencimento</TableHead>
-                <TableHead>Valor</TableHead>
                 <TableHead>Pagamento</TableHead>
                 <TableHead>Juros</TableHead>
-                <TableHead>Total Pago</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {monthApartments.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum apartamento cadastrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum apartamento cadastrado</TableCell></TableRow>
               ) : (
                 monthApartments.map(apt => {
                   const config = statusConfig[apt.status];
@@ -131,10 +129,8 @@ export default function Apartamentos() {
                     <TableRow key={apt.id}>
                       <TableCell className="font-semibold">{apt.apartmentNumber}</TableCell>
                       <TableCell className="text-sm">{formatDate(apt.dueDate)}</TableCell>
-                      <TableCell className="text-sm">{formatCurrency(apt.amount)}</TableCell>
                       <TableCell className="text-sm">{apt.paymentDate ? formatDate(apt.paymentDate) : '—'}</TableCell>
                       <TableCell className="text-sm text-expense">{apt.interestAmount > 0 ? formatCurrency(apt.interestAmount) : '—'}</TableCell>
-                      <TableCell className="text-sm font-semibold">{apt.totalPaid > 0 ? formatCurrency(apt.totalPaid) : '—'}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={config.className}>
                           <config.icon className="w-3 h-3 mr-1" />
