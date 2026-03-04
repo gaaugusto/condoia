@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCondoStore } from '@/store/condoStore';
+import { useAuth } from '@/hooks/useAuth';
 import { calculateBalance, formatCurrency, formatDate, MONTH_NAMES } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 
 export default function Lancamentos() {
   const { months, selectedMonthId, selectMonth, addMonth, addTransaction, deleteTransaction } = useCondoStore();
+  const { isSindico } = useAuth();
   const [showNewMonth, setShowNewMonth] = useState(false);
   const [showNewTx, setShowNewTx] = useState(false);
   const [newMonth, setNewMonth] = useState({ month: 1, year: 2026, balance: 0 });
@@ -62,72 +64,76 @@ export default function Lancamentos() {
             </SelectContent>
           </Select>
 
-          <Dialog open={showNewMonth} onOpenChange={setShowNewMonth}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon"><Calendar className="w-4 h-4" /></Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Novo Mês</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Mês</Label>
-                    <Select value={String(newMonth.month)} onValueChange={(v) => setNewMonth(p => ({ ...p, month: Number(v) }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {MONTH_NAMES.map((name, i) => (
-                          <SelectItem key={i} value={String(i + 1)}>{name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+          {isSindico && (
+            <>
+              <Dialog open={showNewMonth} onOpenChange={setShowNewMonth}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon"><Calendar className="w-4 h-4" /></Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Novo Mês</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Mês</Label>
+                        <Select value={String(newMonth.month)} onValueChange={(v) => setNewMonth(p => ({ ...p, month: Number(v) }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MONTH_NAMES.map((name, i) => (
+                              <SelectItem key={i} value={String(i + 1)}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Ano</Label>
+                        <Input type="number" value={newMonth.year} onChange={e => setNewMonth(p => ({ ...p, year: Number(e.target.value) }))} />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Saldo Inicial (R$)</Label>
+                      <Input type="number" step="0.01" value={newMonth.balance} onChange={e => setNewMonth(p => ({ ...p, balance: Number(e.target.value) }))} />
+                    </div>
+                    <Button onClick={handleAddMonth} className="w-full">Criar Mês</Button>
                   </div>
-                  <div>
-                    <Label>Ano</Label>
-                    <Input type="number" value={newMonth.year} onChange={e => setNewMonth(p => ({ ...p, year: Number(e.target.value) }))} />
-                  </div>
-                </div>
-                <div>
-                  <Label>Saldo Inicial (R$)</Label>
-                  <Input type="number" step="0.01" value={newMonth.balance} onChange={e => setNewMonth(p => ({ ...p, balance: Number(e.target.value) }))} />
-                </div>
-                <Button onClick={handleAddMonth} className="w-full">Criar Mês</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                </DialogContent>
+              </Dialog>
 
-          <Dialog open={showNewTx} onOpenChange={setShowNewTx}>
-            <DialogTrigger asChild>
-              <Button><Plus className="w-4 h-4 mr-2" /> Lançamento</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Novo Lançamento</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Tipo</Label>
-                  <Select value={newTx.type} onValueChange={(v: 'receita' | 'despesa') => setNewTx(p => ({ ...p, type: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="receita">Receita</SelectItem>
-                      <SelectItem value="despesa">Despesa</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Data</Label>
-                  <Input type="date" value={newTx.date} onChange={e => setNewTx(p => ({ ...p, date: e.target.value }))} />
-                </div>
-                <div>
-                  <Label>Descrição</Label>
-                  <Input value={newTx.description} onChange={e => setNewTx(p => ({ ...p, description: e.target.value }))} placeholder="Ex: CEMIG" />
-                </div>
-                <div>
-                  <Label>Valor (R$)</Label>
-                  <Input type="number" step="0.01" value={newTx.value || ''} onChange={e => setNewTx(p => ({ ...p, value: Number(e.target.value) }))} />
-                </div>
-                <Button onClick={handleAddTx} className="w-full">Adicionar</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              <Dialog open={showNewTx} onOpenChange={setShowNewTx}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="w-4 h-4 mr-2" /> Lançamento</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Novo Lançamento</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Tipo</Label>
+                      <Select value={newTx.type} onValueChange={(v: 'receita' | 'despesa') => setNewTx(p => ({ ...p, type: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="receita">Receita</SelectItem>
+                          <SelectItem value="despesa">Despesa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Data</Label>
+                      <Input type="date" value={newTx.date} onChange={e => setNewTx(p => ({ ...p, date: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Descrição</Label>
+                      <Input value={newTx.description} onChange={e => setNewTx(p => ({ ...p, description: e.target.value }))} placeholder="Ex: CEMIG" />
+                    </div>
+                    <div>
+                      <Label>Valor (R$)</Label>
+                      <Input type="number" step="0.01" value={newTx.value || ''} onChange={e => setNewTx(p => ({ ...p, value: Number(e.target.value) }))} />
+                    </div>
+                    <Button onClick={handleAddTx} className="w-full">Adicionar</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </div>
 
@@ -175,12 +181,12 @@ export default function Lancamentos() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  {isSindico && <TableHead className="w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentMonth.transactions.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum lançamento registrado</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={isSindico ? 5 : 4} className="text-center text-muted-foreground py-8">Nenhum lançamento registrado</TableCell></TableRow>
                 ) : (
                   currentMonth.transactions.map(tx => (
                     <TableRow key={tx.id}>
@@ -195,11 +201,13 @@ export default function Lancamentos() {
                       <TableCell className={`text-right font-semibold text-sm ${tx.type === 'receita' ? 'text-income' : 'text-expense'}`}>
                         {formatCurrency(tx.value)}
                       </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(currentMonth.id, tx.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+                      {isSindico && (
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(currentMonth.id, tx.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
